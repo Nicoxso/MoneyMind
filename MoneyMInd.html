@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>MoneyMind</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#eef2f7;
+}
+
+.sidebar{
+width:220px;
+height:100vh;
+background:#0a3d91;
+color:white;
+position:fixed;
+padding-top:20px;
+}
+
+.sidebar h2{
+text-align:center;
+margin-bottom:30px;
+}
+
+.sidebar button{
+width:100%;
+padding:15px;
+border:none;
+background:none;
+color:white;
+text-align:left;
+font-size:16px;
+cursor:pointer;
+}
+
+.sidebar button:hover{
+background:#1456c5;
+}
+
+.main{
+margin-left:220px;
+padding:25px;
+}
+
+.dashboard{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:20px;
+margin-bottom:20px;
+}
+
+.stat{
+background:#1e6df2;
+color:white;
+padding:20px;
+border-radius:10px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+margin-bottom:20px;
+}
+
+input,select{
+padding:10px;
+margin:5px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+button.add{
+background:#1e6df2;
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:6px;
+cursor:pointer;
+}
+
+ul{
+list-style:none;
+padding:0;
+}
+
+li{
+background:#f2f4f8;
+margin:5px 0;
+padding:10px;
+border-radius:6px;
+}
+
+.progress{
+background:#ddd;
+border-radius:20px;
+overflow:hidden;
+height:20px;
+}
+
+.progress-bar{
+background:#1e6df2;
+height:100%;
+width:0%;
+}
+
+.chat{
+border:1px solid #ddd;
+height:200px;
+overflow-y:auto;
+padding:10px;
+margin-bottom:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>MoneyMind</h2>
+
+<button onclick="mostrar('inicio')">🏠 Inicio</button>
+<button onclick="mostrar('ingresos')">💰 Ingresos</button>
+<button onclick="mostrar('gastos')">💳 Gastos</button>
+<button onclick="mostrar('planificacion')">📊 Planificación</button>
+<button onclick="mostrar('ahorro')">🎯 Ahorro</button>
+
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+
+<div id="inicio" class="seccion">
+
+<div class="dashboard">
+
+<div class="stat">
+<h3>Ingresos</h3>
+<h1>$<span id="ingresosTotal">0</span></h1>
+</div>
+
+<div class="stat">
+<h3>Gastos</h3>
+<h1>$<span id="gastosTotal">0</span></h1>
+</div>
+
+<div class="stat">
+<h3>Balance</h3>
+<h1>$<span id="balance">0</span></h1>
+</div>
+
+</div>
+
+<div class="card">
+<h3>Gráfica de Gastos</h3>
+<canvas id="grafica"></canvas>
+</div>
+
+<div class="card">
+
+<h3>Chat de ayuda</h3>
+
+<div class="chat" id="chatBox"></div>
+
+<input type="text" id="chatInput" placeholder="Pregunta algo">
+<button class="add" onclick="enviarMensaje()">Enviar</button>
+
+</div>
+
+</div>
+
+<!-- INGRESOS -->
+
+<div id="ingresos" class="seccion" style="display:none">
+
+<div class="card">
+
+<h2>Registrar ingreso</h2>
+
+<input type="text" id="nombreIngreso" placeholder="Origen">
+<input type="number" id="valorIngreso" placeholder="Cantidad">
+
+<button class="add" onclick="agregarIngreso()">Agregar</button>
+
+<ul id="listaIngresos"></ul>
+
+</div>
+
+</div>
+
+<!-- GASTOS -->
+
+<div id="gastos" class="seccion" style="display:none">
+
+<div class="card">
+
+<h2>Registrar gasto</h2>
+
+<input type="text" id="nombreGasto" placeholder="Nombre">
+<input type="number" id="valorGasto" placeholder="Valor">
+
+<select id="categoriaGasto">
+<option>Comida</option>
+<option>Transporte</option>
+<option>Servicios</option>
+<option>Ocio</option>
+<option>Otros</option>
+</select>
+
+<button class="add" onclick="agregarGasto()">Agregar</button>
+
+<ul id="listaGastos"></ul>
+
+</div>
+
+</div>
+
+<!-- PLANIFICACION -->
+
+<div id="planificacion" class="seccion" style="display:none">
+
+<div class="card">
+
+<h2>Planificación financiera</h2>
+
+<input type="text" id="categoriaPlan" placeholder="Categoría (ej: arriendo)">
+<input type="number" id="porcentajePlan" placeholder="Porcentaje">
+
+<button class="add" onclick="agregarPlan()">Agregar</button>
+
+<ul id="listaPlan"></ul>
+
+<canvas id="graficaPlan"></canvas>
+
+</div>
+
+</div>
+
+<!-- AHORRO -->
+
+<div id="ahorro" class="seccion" style="display:none">
+
+<div class="card">
+
+<h2>Meta de ahorro</h2>
+
+<input type="number" id="meta" placeholder="Meta">
+<button class="add" onclick="definirMeta()">Guardar</button>
+
+<br><br>
+
+<input type="number" id="aporte" placeholder="Aporte a ahorro">
+<button class="add" onclick="agregarAhorro()">Agregar</button>
+
+<h3>Ahorro actual: $<span id="ahorroActual">0</span></h3>
+
+<div class="progress">
+<div class="progress-bar" id="barra"></div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let ingresos=0
+let gastos=0
+let meta=0
+let ahorroActual=0
+
+let listaGastosDatos=[]
+let colores=[]
+let planDatos=[]
+let coloresPlan=[]
+
+let coloresDisponibles=[
+"#FF6384","#36A2EB","#FFCE56","#4BC0C0",
+"#9966FF","#FF9F40","#2ecc71","#e74c3c",
+"#1abc9c","#9b59b6","#f1c40f","#34495e",
+"#16a085","#e67e22","#3498db","#c0392b"
+]
+
+function obtenerColor(){
+
+if(coloresDisponibles.length==0){
+return "#000000"
+}
+
+return coloresDisponibles.shift()
+
+}
+
+function mostrar(seccion){
+
+document.querySelectorAll(".seccion").forEach(s=>{
+s.style.display="none"
+})
+
+document.getElementById(seccion).style.display="block"
+
+}
+
+function actualizarBalance(){
+
+document.getElementById("ingresosTotal").textContent=ingresos
+document.getElementById("gastosTotal").textContent=gastos
+document.getElementById("balance").textContent=ingresos-gastos
+
+}
+
+function agregarIngreso(){
+
+let nombre=document.getElementById("nombreIngreso").value
+let valor=Number(document.getElementById("valorIngreso").value)
+
+if(nombre==""||valor==0)return
+
+ingresos+=valor
+
+let item=document.createElement("li")
+item.textContent=nombre+" + $"+valor
+
+document.getElementById("listaIngresos").appendChild(item)
+
+actualizarBalance()
+
+}
+
+function agregarGasto(){
+
+let nombre=document.getElementById("nombreGasto").value
+let valor=Number(document.getElementById("valorGasto").value)
+let categoria=document.getElementById("categoriaGasto").value
+
+if(nombre==""||valor==0)return
+
+gastos+=valor
+
+listaGastosDatos.push({nombre,categoria,valor})
+colores.push(obtenerColor())
+
+let item=document.createElement("li")
+item.textContent=nombre+" ("+categoria+") - $"+valor
+
+document.getElementById("listaGastos").appendChild(item)
+
+actualizarBalance()
+actualizarGrafica()
+
+}
+
+let grafica=new Chart(document.getElementById("grafica"),{
+type:"pie",
+data:{
+labels:[],
+datasets:[{data:[],backgroundColor:colores}]
+}
+})
+
+function actualizarGrafica(){
+
+grafica.data.labels=listaGastosDatos.map(g=>g.nombre)
+grafica.data.datasets[0].data=listaGastosDatos.map(g=>g.valor)
+
+grafica.update()
+
+}
+
+function definirMeta(){
+
+meta=Number(document.getElementById("meta").value)
+
+}
+
+function agregarAhorro(){
+
+let aporte=Number(document.getElementById("aporte").value)
+
+ahorroActual+=aporte
+
+document.getElementById("ahorroActual").textContent=ahorroActual
+
+let progreso=(ahorroActual/meta)*100
+
+if(progreso>100)progreso=100
+
+document.getElementById("barra").style.width=progreso+"%"
+
+}
+
+function agregarPlan(){
+
+let categoria=document.getElementById("categoriaPlan").value
+let porcentaje=Number(document.getElementById("porcentajePlan").value)
+
+planDatos.push({categoria,porcentaje})
+coloresPlan.push(obtenerColor())
+
+let item=document.createElement("li")
+item.textContent=categoria+" - "+porcentaje+"%"
+
+document.getElementById("listaPlan").appendChild(item)
+
+actualizarPlan()
+
+}
+
+let graficaPlan=new Chart(document.getElementById("graficaPlan"),{
+type:"doughnut",
+data:{
+labels:[],
+datasets:[{data:[],backgroundColor:coloresPlan}]
+}
+})
+
+function actualizarPlan(){
+
+graficaPlan.data.labels=planDatos.map(p=>p.categoria)
+graficaPlan.data.datasets[0].data=planDatos.map(p=>p.porcentaje)
+
+graficaPlan.update()
+
+}
+
+function enviarMensaje(){
+
+let input=document.getElementById("chatInput").value
+let chat=document.getElementById("chatBox")
+
+let user=document.createElement("p")
+user.textContent="Usuario: "+input
+chat.appendChild(user)
+
+let bot=document.createElement("p")
+bot.textContent="MoneyMind: Usa el menú para registrar ingresos, gastos o planificar tu dinero."
+
+chat.appendChild(bot)
+
+document.getElementById("chatInput").value=""
+
+}
+
+</script>
+
+</body>
+</html>
